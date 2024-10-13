@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Box, List, ListItem, ListItemButton, ListItemText } from "@mui/material";
-//import { moveToHistory } from "../features/prescriptions/prescriptionsSlice";
 import { useSelector } from "react-redux";
 import { MDBModal, MDBModalBody, MDBModalContent, MDBModalDialog, MDBModalHeader, MDBModalTitle } from "mdb-react-ui-kit";
 import { selectHistory } from "../features/prescriptions/prescriptionsSlice";
