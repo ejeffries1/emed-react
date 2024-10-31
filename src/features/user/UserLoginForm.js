@@ -8,6 +8,9 @@ import { setCurrentUser, selectCurrentUser } from "./userSlice";
 import { validateUserLoginForm } from '../../utils/validateUserLoginForm';
 import { validateRegisterForm } from '../../utils/validateRegisterForm';
 import { Label } from "reactstrap";
+import { auth } from "../../firebase.config;" // Import your Firebase auth
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+
 
 const UserLoginForm = () => {
     const [loginModal, setLoginModal] = useState(false);
@@ -20,29 +23,28 @@ const UserLoginForm = () => {
     const navigate = useNavigate(); // Hook for navigation
 
     const handleLogin = (values) => {
-        const user = {
-            id: Date.now(),
-            username: values.username,
-            email: values.email,
-            password: values.password,
-        };
-        dispatch(setCurrentUser(user));
-        setLoginModal(false);
+        signInWithEmailAndPassword(auth, values.email, values.password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                dispatch(setCurrentUser({ id: user.uid, email: user.email }));
+                setLoginModal(false);
+            })
+            .catch((error) => {
+                console.error("Login error:", error.message);
+            });
     };
 
     const handleRegister = (values) => {
-        const newUser = {
-            id: Date.now(),
-            firstName: values.firstName,
-            lastName: values.lastName,
-            username: values.username,
-            email: values.email,
-            password: values.password,
-        };
-        dispatch(setCurrentUser(newUser));
-        setRegisterModal(false);
+        createUserWithEmailAndPassword(auth, values.email, values.password)
+            .then((userCredential) => {
+                const newUser = userCredential.user;
+                dispatch(setCurrentUser({ id: newUser.uid, email: newUser.email }));
+                setRegisterModal(false);
+            })
+            .catch((error) => {
+                console.error("Registration error:", error.message);
+            });
     };
-
     const goToAccount = () => {
         navigate('/account');  // Navigate to the account page
     };
@@ -53,7 +55,7 @@ const UserLoginForm = () => {
             {currentUser ? (
                 <span className="navbar-text ml-auto">
                     <Button color="inherit" onClick={goToAccount}>
-                        Welcome, {currentUser.username}
+                        Welcome, {currentUser.email}
                     </Button>
                 </span>
             ) : (
@@ -69,11 +71,11 @@ const UserLoginForm = () => {
                             <MDBBtn className='btn-close' color='none' onClick={toggleLoginModal}></MDBBtn>
                         </MDBModalHeader>
                         <MDBModalBody>
-                            <Formik initialValues={{ username: '', password: '' }} onSubmit={handleLogin} validate={validateUserLoginForm}>
+                            <Formik initialValues={{ email: '', password: '' }} onSubmit={handleLogin} validate={validateUserLoginForm}>
                                 <Form>
                                     <FormGroup>
-                                        <Label>Username</Label>
-                                        <Field type="text" id="username" name="username" className="form-control" />
+                                        <Label>email</Label>
+                                        <Field type="text" id="email" name="email" className="form-control" />
                                     </FormGroup>
                                     <FormGroup>
                                         <Label>Password</Label>
@@ -100,7 +102,7 @@ const UserLoginForm = () => {
                         </MDBModalHeader>
                         <MDBModalBody>
                             <Formik initialValues={{
-                                firstName: '', lastName: '', username: '', email: '', password: '', confirmPassword: ''
+                                firstName: '', lastName: '', email: '', password: '', confirmPassword: ''
                             }} onSubmit={handleRegister} validate={validateRegisterForm}>
                                 {({ errors, touched }) => (
                                     <Form>
@@ -113,11 +115,6 @@ const UserLoginForm = () => {
                                             <Label>Last Name</Label>
                                             <Field type="text" id="lastName" name="lastName" className="form-control" />
                                             {errors.lastName && touched.lastName && <div className="text-danger">{errors.lastName}</div>}
-                                        </FormGroup>
-                                        <FormGroup>
-                                            <Label>Username</Label>
-                                            <Field type="text" id="username" name="username" className="form-control" />
-                                            {errors.username && touched.username && <div className="text-danger">{errors.username}</div>}
                                         </FormGroup>
                                         <FormGroup>
                                             <Label>Email</Label>
