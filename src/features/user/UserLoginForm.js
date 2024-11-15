@@ -8,7 +8,7 @@ import { setCurrentUser, selectCurrentUser } from "./userSlice";
 import { validateUserLoginForm } from '../../utils/validateUserLoginForm';
 import { validateRegisterForm } from '../../utils/validateRegisterForm';
 import { Label } from "reactstrap";
-import { auth, db } from '../../firebase.config';
+import { auth, db } from '../../firebaseConfig';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, onSnapshot } from "firebase/firestore";
 
