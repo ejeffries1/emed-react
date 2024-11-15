@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Formik, Field, Form } from "formik";
 import { FormGroup, Button } from "@mui/material";
 import { MDBModal, MDBModalDialog, MDBModalContent, MDBModalHeader, MDBModalTitle, MDBBtn, MDBModalBody } from "mdb-react-ui-kit";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";  // Import useNavigate for navigation
+import { useNavigate } from "react-router-dom"; 
 import { setCurrentUser, selectCurrentUser } from "./userSlice";
 import { validateUserLoginForm } from '../../utils/validateUserLoginForm';
 import { validateRegisterForm } from '../../utils/validateRegisterForm';
 import { Label } from "reactstrap";
-import { auth } from "../../firebase.config;" // Import your Firebase auth
+import { auth, db } from '../../firebase.config';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-
+import { doc, setDoc, onSnapshot } from "firebase/firestore";
 
 const UserLoginForm = () => {
     const [loginModal, setLoginModal] = useState(false);
@@ -20,13 +20,30 @@ const UserLoginForm = () => {
 
     const dispatch = useDispatch();
     const currentUser = useSelector(selectCurrentUser);
-    const navigate = useNavigate(); // Hook for navigation
+    const navigate = useNavigate();
+
+    // Fetch and listen for user data changes
+    useEffect(() => {
+        if (currentUser) {
+            const userDocRef = doc(db, 'customers', currentUser.email);
+            const unsubscribe = onSnapshot(userDocRef, (doc) => {
+                if (doc.exists()) {
+                    const userData = doc.data();
+                    console.log("Fetched user data:", userData);
+                    // Update additional user data if needed
+                }
+            });
+
+            return () => unsubscribe(); // Clean up listener on unmount
+        }
+    }, [currentUser]);
 
     const handleLogin = (values) => {
         signInWithEmailAndPassword(auth, values.email, values.password)
             .then((userCredential) => {
                 const user = userCredential.user;
                 dispatch(setCurrentUser({ id: user.uid, email: user.email }));
+
                 setLoginModal(false);
             })
             .catch((error) => {
@@ -39,14 +56,24 @@ const UserLoginForm = () => {
             .then((userCredential) => {
                 const newUser = userCredential.user;
                 dispatch(setCurrentUser({ id: newUser.uid, email: newUser.email }));
+
+                // Add new user to Firestore
+                const userDocRef = doc(db, 'customers', newUser.email);
+                setDoc(userDocRef, {
+                    name: `${values.firstName} ${values.lastName}`,
+                    email: newUser.email,
+                    phone: '', // Initialize with empty phone or other fields
+                });
+
                 setRegisterModal(false);
             })
             .catch((error) => {
                 console.error("Registration error:", error.message);
             });
     };
+
     const goToAccount = () => {
-        navigate('/account');  // Navigate to the account page
+        navigate('/account');
     };
 
     return (
@@ -131,7 +158,7 @@ const UserLoginForm = () => {
                                             <Field type="password" id="confirmPassword" name="confirmPassword" className="form-control" />
                                             {errors.confirmPassword && touched.confirmPassword && <div className="text-danger">{errors.confirmPassword}</div>}
                                         </FormGroup>
-                                        <MDBBtn type="submit" style={{ marginTop: 25, backgroundColor: '#512da8' }}>Register</MDBBtn>
+                                        <MDBBtn type="submit" style={{ marginTop: 25, backgroundColor: '#512da8' }}>Registar</MDBBtn>
                                     </Form>
                                 )}
                             </Formik>

@@ -1,6 +1,11 @@
 {
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
   "hosting": {
-    "public": "build",
+    "site": "emed-01-37606",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
